@@ -14,12 +14,10 @@ import numpy as np
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from data import process_data
-from model import HeteroGNN
+# from model import HeteroGNN
 import torch.backends.cudnn as cudnn
 import random
-
-# args.seed
-# args.
+from model import HANModel
 
 torch.manual_seed(0)
 torch.cuda.manual_seed(0)
@@ -29,72 +27,51 @@ cudnn.benchmark = False
 cudnn.deterministic = True
 random.seed(0)
 
-data, out_channels, affiliation_encoder = process_data()
+data, out_channels, affiliation_encoder, test_mask = process_data()
+# Initialize the model
+model = HANModel(paper_in_channels=data['paper'].x.shape[1], author_in_channels=data['author'].x.shape[1], hidden_channels=128, out_channels=out_channels)
 
-model = HeteroGNN(hidden_channels=128, out_channels=out_channels)  # num_classes is the number of possible affiliations
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-criterion = torch.nn.CrossEntropyLoss()
+criterion = nn.CrossEntropyLoss()
 
-# # Training loop
-# for epoch in tqdm(range(10), desc="Training Epochs"):  # number of epochs
-#     model.train()
-#     optimizer.zero_grad()
-#     out = model(data.x_dict, data.edge_index_dict)
-#     loss = criterion(out['author'][data['author'].train_mask], data['author'].y[data['author'].train_mask])
-#     loss.backward()
-#     optimizer.step()
+def train():
+    model.train()
+    optimizer.zero_grad()
+    out = model(data.x_dict, data.edge_index_dict)['author'][data['author'].train_mask]
+    loss = criterion(out, data['author'].y[data['author'].train_mask])
+    loss.backward()
+    optimizer.step()
+    return loss.item()
 
-#     if epoch % 10 == 0:
-#         print(f'Epoch {epoch}, Loss: {loss.item()}')
+def evaluate(mask):
+    model.eval()
+    with torch.no_grad():
+        out = model(data.x_dict, data.edge_index_dict)['author'][mask]
+        loss = criterion(out, data['author'].y[mask]).item()
+        pred = out.argmax(dim=1)
+        correct = pred.eq(data['author'].y[mask]).sum().item()
+        acc = correct / mask.sum().item()
+    return loss, acc
+
+def visualize_top_k_predictions(mask, k=5):
+    model.eval()
+    with torch.no_grad():
+        out = model(data.x_dict, data.edge_index_dict)['author'][mask]
+        predictions = torch.topk(out, k, dim=1)
+
+    for idx in torch.where(mask)[0][:5]:  # Visualize for the first 5 authors in the mask
+        print(f"Author {idx.item()}:")
+        for i, v in zip(predictions.indices[idx], predictions.values[idx]):
+            print(f"  Affiliation: {affiliation_encoder.inverse_transform([i.item()])[0]}, Score: {v.item()}")
+
 
 for epoch in tqdm(range(10), desc="Training Epochs"):
-    model.train()
-    total_train_loss = 0
-    for batch in train_loader:
-        optimizer.zero_grad()
-        out = model(batch.x_dict, batch.edge_index_dict)
-        loss = criterion(out['author'], batch['author'].y)
-        loss.backward()
-        optimizer.step()
-        total_train_loss += loss.item()
+    loss = train()
+    val_loss, val_acc = evaluate(data['author'].val_mask)
+    print(f'Epoch: {epoch}, Loss: {loss:.4f}, Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}')
 
-    avg_train_loss = total_train_loss / len(train_loader)
-    print(f'Epoch {epoch}, Loss: {avg_train_loss}')
-    
-    model.eval()
-    total_valid_loss = 0
-    with torch.no_grad():
-        for batch in valid_loader:
-            out = model(batch.x_dict, batch.edge_index_dict)
-            valid_loss = criterion(out['author'], batch['author'].y)
-            total_valid_loss += valid_loss.item()
-    
-    avg_valid_loss = total_valid_loss / len(valid_loader)
-    print(f'Epoch {epoch}, Validation Loss: {avg_valid_loss}')
-    
-
-# Prediction
-model.eval()
-all_preds = []
-total_test_loss=0
-with torch.no_grad():
-    for batch in test_loader:
-        out = model(batch.x_dict, batch.edge_index_dict)['author']
-        all_preds.append(out)
-        test_loss = criterion(out['author'], batch['author'].y)
-        total_test_loss += test_loss.item()
-        
-avg_test_loss = total_test_loss / len(test_loader)
-all_preds = torch.cat(all_preds, dim=0)
+test_loss, test_acc = evaluate(data['author'].test_mask)
+print(f'Test Loss: {test_loss:.4f}, Test Accuracy: {test_acc:.4f}')
 
 
-k=4
-top_k_preds = torch.topk(out, k, dim=1)   
-# top_k_preds will contain two tensors: scores and indices
-print('score : ',top_k_preds[0]) # contains the scores
-print('pred : ', top_k_preds[1]) # contains the indices of the top k predictions
-
-# If you want to convert these indices back to labels (assuming you have a label encoder)
-label_encoder = affiliation_encoder  # Your label encoder
-top_k_labels = label_encoder.inverse_transform(top_k_preds[1])
-print('top_k_labels : ', top_k_labels)
+visualize_top_k_predictions(data['author'].test_mask, k=5)

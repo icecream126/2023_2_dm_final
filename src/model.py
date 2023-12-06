@@ -1,23 +1,34 @@
 import torch
-from torch_geometric.nn import HeteroConv, SAGEConv, to_hetero
+from torch_geometric.nn import HeteroConv, SAGEConv, to_hetero, GATConv
 import torch.nn.functional as F
 from torch_geometric.data import HeteroData
+import torch.nn as nn
 
-class HeteroGNN(torch.nn.Module):
-    def __init__(self, hidden_channels, out_channels):
-        super().__init__()
-        self.conv1 = HeteroConv({
-            ('author', 'writes', 'paper'): SAGEConv((-1, -1), hidden_channels),
-            ('paper', 'written_by', 'author'): SAGEConv((-1, -1), hidden_channels)
-        })
-        self.conv2 = HeteroConv({
-            ('author', 'writes', 'paper'): SAGEConv((-1, -1), out_channels),
-            ('paper', 'written_by', 'author'): SAGEConv((-1, -1), out_channels)
-        })
+class HANLayer(nn.Module):
+    def __init__(self, paper_in_channels, author_in_channels, paper_out_channels, author_out_channels):
+        super(HANLayer, self).__init__()
+        # For edges from authors to papers, use author_in_channels
+        self.conv_author_to_paper = GATConv(author_in_channels, paper_out_channels, add_self_loops=False)
+        # For edges from papers to authors, use paper_out_channels as it is the output from the previous line
+        self.conv_paper_to_author = GATConv(paper_out_channels, author_out_channels, add_self_loops=False)
 
     def forward(self, x_dict, edge_index_dict):
-        x_dict = self.conv1(x_dict, edge_index_dict)
+        # Apply GATConv for edges from authors to papers
+        paper_feats = self.conv_author_to_paper(x_dict['author'], edge_index_dict[('author', 'writes', 'paper')])
+        # Apply GATConv for edges from papers to authors
+        author_feats = self.conv_paper_to_author(paper_feats, edge_index_dict[('paper', 'written_by', 'author')])
+
+        return {'author': author_feats, 'paper': paper_feats}
+
+class HANModel(nn.Module):
+    def __init__(self, paper_in_channels, author_in_channels, hidden_channels, out_channels):
+        super().__init__()
+        self.layer1 = HANLayer(paper_in_channels, author_in_channels, hidden_channels, hidden_channels)
+        self.layer2 = HANLayer(hidden_channels, hidden_channels, hidden_channels, out_channels)
+
+    def forward(self, x_dict, edge_index_dict):
+        x_dict = self.layer1(x_dict, edge_index_dict)
         x_dict = {key: F.relu(x) for key, x in x_dict.items()}
-        x_dict = self.conv2(x_dict, edge_index_dict)
-        return x_dict
+        x_dict = self.layer2(x_dict, edge_index_dict)
+        return x_dict# ['author']
 
