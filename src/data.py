@@ -1,19 +1,12 @@
 import pandas as pd
 import torch
 from torch_geometric.data import HeteroData
-from torch_geometric.nn import HeteroConv, GATConv, HANConv
-import torch.nn.functional as F
-import torch.nn as nn
 import torch
 
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
-# from model import HANModel
-import torch.nn as nn
 import numpy as np
 
 from sklearn.feature_extraction.text import TfidfVectorizer
-import torch_geometric.transforms as T
-from torch_geometric.loader import NeighborLoader
 from sklearn.model_selection import train_test_split
 
 
@@ -92,8 +85,8 @@ def process_data():
 
     edge_index = torch.tensor(edge_index).t().contiguous() # [2, 54819]
 
-    data['author', 'writes', 'paper'].edge_index = edge_index
-    data['paper', 'written_by', 'author'].edge_index = torch.flip(edge_index, [0])
+    data['author', 'to', 'paper'].edge_index = edge_index
+    data['paper', 'to', 'author'].edge_index = torch.flip(edge_index, [0])
     
 
     return data, out_channels, affiliation_encoder, test_mask

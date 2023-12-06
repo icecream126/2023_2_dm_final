@@ -1,23 +1,13 @@
-import pandas as pd
 import torch
-from torch_geometric.data import HeteroData
-from torch_geometric.nn import HeteroConv, GATConv, HANConv
-import torch.nn.functional as F
-import torch.nn as nn
-import torch
-
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
-from tqdm import tqdm
-
-import torch.nn as nn
 import numpy as np
+import torch.nn as nn
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from data import process_data
-# from model import HeteroGNN
 import torch.backends.cudnn as cudnn
 import random
+from tqdm import tqdm
+
 from model import HANModel
+from data import process_data
 
 torch.manual_seed(0)
 torch.cuda.manual_seed(0)

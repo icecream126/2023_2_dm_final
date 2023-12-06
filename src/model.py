@@ -1,7 +1,5 @@
-import torch
-from torch_geometric.nn import HeteroConv, SAGEConv, to_hetero, GATConv
+from torch_geometric.nn import HANConv
 import torch.nn.functional as F
-from torch_geometric.data import HeteroData
 import torch.nn as nn
 
 class HANLayer(nn.Module):
@@ -11,8 +9,8 @@ class HANLayer(nn.Module):
         self.conv_paper_to_author = GATConv(paper_out_channels, author_out_channels, add_self_loops=False)
 
     def forward(self, x_dict, edge_index_dict):
-        paper_feats = self.conv_author_to_paper(x_dict['author'], edge_index_dict[('author', 'writes', 'paper')])
-        author_feats = self.conv_paper_to_author(paper_feats, edge_index_dict[('paper', 'written_by', 'author')])
+        paper_feats = self.conv_author_to_paper(x_dict['author'], edge_index_dict[('author', 'to', 'paper')])
+        author_feats = self.conv_paper_to_author(paper_feats, edge_index_dict[('paper', 'to', 'author')])
 
         return {'author': author_feats, 'paper': paper_feats}
 
@@ -26,5 +24,5 @@ class HANModel(nn.Module):
         x_dict = self.layer1(x_dict, edge_index_dict)
         x_dict = {key: F.relu(x) for key, x in x_dict.items()}
         x_dict = self.layer2(x_dict, edge_index_dict)
-        return x_dict# ['author']
-
+        return x_dict
+    
