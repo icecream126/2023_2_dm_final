@@ -7,15 +7,11 @@ import torch.nn as nn
 class HANLayer(nn.Module):
     def __init__(self, paper_in_channels, author_in_channels, paper_out_channels, author_out_channels):
         super(HANLayer, self).__init__()
-        # For edges from authors to papers, use author_in_channels
         self.conv_author_to_paper = GATConv(author_in_channels, paper_out_channels, add_self_loops=False)
-        # For edges from papers to authors, use paper_out_channels as it is the output from the previous line
         self.conv_paper_to_author = GATConv(paper_out_channels, author_out_channels, add_self_loops=False)
 
     def forward(self, x_dict, edge_index_dict):
-        # Apply GATConv for edges from authors to papers
         paper_feats = self.conv_author_to_paper(x_dict['author'], edge_index_dict[('author', 'writes', 'paper')])
-        # Apply GATConv for edges from papers to authors
         author_feats = self.conv_paper_to_author(paper_feats, edge_index_dict[('paper', 'written_by', 'author')])
 
         return {'author': author_feats, 'paper': paper_feats}

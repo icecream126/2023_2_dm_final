@@ -19,8 +19,8 @@ from sklearn.model_selection import train_test_split
 
 def process_data():
 
-    papers_df = pd.read_csv('./dataset/gathered_paper.csv')
-    authors_df = pd.read_csv('./dataset/gathered_author.csv')
+    papers_df = pd.read_csv('./dataset/processed_papers.csv')
+    authors_df = pd.read_csv('./dataset/processed_authors.csv')
 
     paper_encoder = LabelEncoder()
     author_encoder = LabelEncoder()
