@@ -74,18 +74,6 @@ def evaluate(mask):
         acc = (pred[mask] == data['author'].y[mask]).sum() / mask.sum()
     return loss, acc
 
-# def visualize_top_k_predictions(mask, k=2):
-#     model.eval()
-#     with torch.no_grad():
-#         out = model(data.x_dict, data.edge_index_dict)# ['author'][mask]
-#         predictions = torch.topk(out, k, dim=1)
-
-#     for idx in torch.where(mask)[0][:5]:  # Visualize for the first 5 authors in the mask
-#         print(f"Author {idx.item()}:")
-#         for i, v in zip(predictions.indices[idx], predictions.values[idx]):
-#             print(f"  Affiliation: {affiliation_encoder.inverse_transform([i.item()])[0]}, Score: {v.item()}")
-
-
 
 def visualize_top_k_predictions(mask, k=2):
     model.eval()
@@ -96,15 +84,22 @@ def visualize_top_k_predictions(mask, k=2):
         predictions = torch.topk(out, k, dim=1)
 
     for idx in torch.where(mask)[0][:5]:  # Visualize for the first 5 authors in the mask
-        for i, v in zip(predictions.indices[idx], predictions.values[idx]):
-            affiliation = affiliation_encoder.inverse_transform([i.item()])[0]
-            score = v.item()
-            predictions_data.append([idx.item(), affiliation, score])
+        # Get the ground truth affiliation for the author
+        true_affiliation_index = data['author'].y[idx].item()
+        true_affiliation = affiliation_encoder.inverse_transform([true_affiliation_index])[0]
+
+        # Generate a string of predictions with scores
+        predictions_str = ', '.join([f"{affiliation_encoder.inverse_transform([i.item()])[0]} ({v.item():.2f})" for i, v in zip(predictions.indices[idx], predictions.values[idx])])
+
+        # Add both ground truth and predictions to the data
+        predictions_data.append([idx.item(), true_affiliation, predictions_str])
 
     # Log to wandb
-    columns = ["author_id", "affiliation", "score"]
+    columns = ["author_id", "ground_truth_affiliation", "predictions"]
     wandb_table = wandb.Table(columns=columns, data=predictions_data)
     wandb.log({"top_k_predictions": wandb_table})
+
+
 
 
 # Variables to track the best validation metrics
@@ -139,10 +134,10 @@ for epoch in tqdm(range(args.max_epoch), desc="Training Epochs"):
     formatted_val_acc = f"{val_acc:.4f}"
     
     wandb.log({
-        "train_loss":formatted_loss,
-        "train_acc":formatted_acc,
-        "val_loss":formatted_val_loss,
-        "val_acc":formatted_val_acc
+        "train_loss":loss,
+        "train_acc":acc,
+        "val_loss":val_loss,
+        "val_acc":val_acc
     })
     
     print(f'Epoch: {epoch}, Acc: {formatted_acc}, Loss: {formatted_loss}, Val Loss: {formatted_val_loss}, Val Acc: {formatted_val_acc}')
@@ -152,8 +147,8 @@ formatted_loss = f"{test_loss:.4f}"
 formatted_acc = f"{test_acc:.4f}"
 
 wandb.log({
-    "test_loss":formatted_loss,
-    "test_acc":formatted_acc,
+    "test_loss":test_loss,
+    "test_acc":test_acc,
 })
 
 print(f'Test Loss: {formatted_loss}, Test Accuracy: {formatted_acc}')
