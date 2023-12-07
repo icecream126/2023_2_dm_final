@@ -13,17 +13,19 @@ from model import HANModel
 import data_tfidf
 import data_glove
 import torch.nn as nn
+import os
+os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
 # Arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--top_k', default=3, type=int)
+parser.add_argument('--top_k', default=4, type=int)
 parser.add_argument('--dim_h', default=512, type=int)
 parser.add_argument('--heads', default=8, type=int)
 parser.add_argument('--seed', default=0, type=int)
 parser.add_argument('--label_num', default=2, type=int)
 parser.add_argument('--max_features', default=100, type=int)
 parser.add_argument('--lr', default=0.01, type=float)
-parser.add_argument('--max_epoch', default=100, type=int)
+parser.add_argument('--max_epoch', default=200, type=int)
 parser.add_argument('--data_type', default='tfidf', type=str)
 args = parser.parse_args()
 
@@ -72,16 +74,38 @@ def evaluate(mask):
         acc = (pred[mask] == data['author'].y[mask]).sum() / mask.sum()
     return loss, acc
 
+# def visualize_top_k_predictions(mask, k=2):
+#     model.eval()
+#     with torch.no_grad():
+#         out = model(data.x_dict, data.edge_index_dict)# ['author'][mask]
+#         predictions = torch.topk(out, k, dim=1)
+
+#     for idx in torch.where(mask)[0][:5]:  # Visualize for the first 5 authors in the mask
+#         print(f"Author {idx.item()}:")
+#         for i, v in zip(predictions.indices[idx], predictions.values[idx]):
+#             print(f"  Affiliation: {affiliation_encoder.inverse_transform([i.item()])[0]}, Score: {v.item()}")
+
+
+
 def visualize_top_k_predictions(mask, k=2):
     model.eval()
+    predictions_data = []
+
     with torch.no_grad():
-        out = model(data.x_dict, data.edge_index_dict)# ['author'][mask]
+        out = model(data.x_dict, data.edge_index_dict)
         predictions = torch.topk(out, k, dim=1)
 
     for idx in torch.where(mask)[0][:5]:  # Visualize for the first 5 authors in the mask
-        print(f"Author {idx.item()}:")
         for i, v in zip(predictions.indices[idx], predictions.values[idx]):
-            print(f"  Affiliation: {affiliation_encoder.inverse_transform([i.item()])[0]}, Score: {v.item()}")
+            affiliation = affiliation_encoder.inverse_transform([i.item()])[0]
+            score = v.item()
+            predictions_data.append([idx.item(), affiliation, score])
+
+    # Log to wandb
+    columns = ["author_id", "affiliation", "score"]
+    wandb_table = wandb.Table(columns=columns, data=predictions_data)
+    wandb.log({"top_k_predictions": wandb_table})
+
 
 # Variables to track the best validation metrics
 best_val_acc = 0.0
@@ -135,4 +159,5 @@ wandb.log({
 print(f'Test Loss: {formatted_loss}, Test Accuracy: {formatted_acc}')
 
 
+# visualize_top_k_predictions(data['author'].test_mask, k=args.top_k)
 visualize_top_k_predictions(data['author'].test_mask, k=args.top_k)
