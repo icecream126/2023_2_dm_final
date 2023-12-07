@@ -1,4 +1,8 @@
 # 🔗 LinkedIn for AI-Researchers
+## About
+Career is a common interest for many AI-researchers. Unlike other job positions, the most important qualification for researchers is research fit with a company. However, it isn't easy to know what would be the company that will fit with one's research. 
+
+To address this, we analyzed academic papers and their authors, specifically sourcing from [openreview](https://openreview.net), a prominent open-access archive. Our focus is on examining the affiliations of authors who contribute to leading AI conferences(NeurIPS, ICML, ICLR), and discerning patterns between their research work and the institutions they are associated with. This project aims to serve as an effective career guidance tool, for not only the junior researchers but also senior researchers who are looking for their new and next career.
 
 ## Environment setting
 * NVCC : 11.6
@@ -30,7 +34,9 @@ CUDA_VISIBLE_DEVICES=0 python src/main.py \
 ```
 
 ## Performance
-Average accuracy over 3 seeds.
+This is average accuracy over 3 seeds.
 * XGBoost : ??%
 * GAT : 55%
 
+Surprisingly, traditional machine learning approach (XGBoost) shows better performance than modern GNN models.  
+We analyze the data and found that our data is highly disconnected which hinders global message passing between other nodes and prone to overfitting in a few subgraphs.
