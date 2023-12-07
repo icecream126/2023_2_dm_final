@@ -8,8 +8,8 @@ parameters:
     values: [0, 1, 2]
   lr:
     values: [0.01, 0.001, 0.0001]
-  heads:
-    values: [6,8]
+  dropout:
+    values: [0.5, 0.6, 0.4]
   dim_h:
     values: [512, 1024]
 command:

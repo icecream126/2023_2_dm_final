@@ -29,9 +29,10 @@ parser.add_argument('--dataset_dir', default='dataset', type=str)
 parser.add_argument('--patience_threshold', default=30, type=int)
 parser.add_argument('--feature_dim', default=300, type=int)
 parser.add_argument('--sample_type', default='undersample', type=str)
+parser.add_argument('--dropout', default=0.6, type=float)
 args = parser.parse_args()
 
-wandb.init(project='DM_final', name = f"sample_{args.sample_type}_feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_heads_{args.heads}")
+wandb.init(project='DM_final', name = f"sample_{args.sample_type}_dropout_{args.dropout}_feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_heads_{args.heads}")
 wandb.config.update(args)
 
 torch.manual_seed(args.seed)
@@ -45,7 +46,7 @@ random.seed(args.seed)
 # Initialize data and model
 data, out_channels, affiliation_encoder, test_mask = process_data(label_num=args.label_num, seed = args.seed, feature_dim=args.feature_dim,sample_type=args.sample_type)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = HANModel(dim_in=-1, dim_h=args.dim_h, dim_out=out_channels, data=data)
+model = HANModel(dim_in=-1, dim_h=args.dim_h, dim_out=out_channels, data=data, dropout=args.dropout)
 data, model =data.to(device), model.to(device)
 
 # Optimzer and loss
@@ -163,5 +164,5 @@ print(f'Test Loss: {formatted_loss}, Test Accuracy: {formatted_acc}')
 
 
 # visualize_top_k_predictions(data['author'].test_mask, k=args.top_k)
-filename = f"./preds/sample_{args.sample_type}_feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_heads_{args.heads}_pred.csv"
+filename = f"./preds/sample_{args.sample_type}_dropout_{args.dropout}_feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_heads_{args.heads}_pred.csv"
 visualize_top_k_predictions(data['author'].test_mask, k=args.top_k, filename=filename)
