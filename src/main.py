@@ -11,7 +11,8 @@ from model import GAT, HAN
 import data_random_edge
 import data_virtual_node
 import pandas as pd
-import data
+import data_gat
+import data_han
 
 import torch.nn as nn
 import os
@@ -49,9 +50,13 @@ cudnn.benchmark = False
 cudnn.deterministic = True
 random.seed(args.seed)
 
+data_dict={
+    'GAT':data_gat,
+    'HAN':data_han
+}
+
 # Initialize data and model
-# data, out_channels, affiliation_encoder, test_mask = dataset_dict[args.data_aug].process_data(label_num=args.label_num, seed = args.seed, feature_dim=args.feature_dim,sample_type=args.sample_type, data_aug = args.data_aug)
-data, out_channels, affiliation_encoder, test_mask = data.process_data(label_num=args.label_num, seed = args.seed, feature_dim=args.feature_dim,sample_type=args.sample_type, data_aug = args.data_aug)
+data, out_channels, affiliation_encoder, test_mask = data_dict[args.model].process_data(label_num=args.label_num, seed = args.seed, feature_dim=args.feature_dim,sample_type=args.sample_type, data_aug = args.data_aug)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 in_channels = data.x.shape[1]
