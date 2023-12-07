@@ -13,6 +13,7 @@ from model import GAT
 # from data_glove import process_data
 import data
 import data_random_edge
+import data_oversample
 import data_virtual_node
 import pandas as pd
 
@@ -29,7 +30,7 @@ parser.add_argument('--seed', default=0, type=int)
 parser.add_argument('--label_num', default=10, type=int)
 parser.add_argument('--max_features', default=100, type=int)
 parser.add_argument('--lr', default=0.01, type=float)
-parser.add_argument('--max_epoch', default=1500, type=int)
+parser.add_argument('--max_epoch', default=5000, type=int)
 parser.add_argument('--dataset_dir', default='dataset', type=str)
 parser.add_argument('--patience_threshold', default=30, type=int)
 parser.add_argument('--feature_dim', default=300, type=int)
@@ -43,7 +44,8 @@ args = parser.parse_args()
 dataset_dict={
     "data":data,
     "rand_edge":data_random_edge,
-    "virtual_node":data_virtual_node
+    "virtual_node":data_virtual_node,
+    "oversample":data_oversample,
 }
 
 wandb.init(project='DM_final', name = f"sample_{args.sample_type}_dropout_{args.dropout}_feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_heads_{args.heads}")
