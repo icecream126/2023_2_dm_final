@@ -10,3 +10,4 @@ processed/
 raw/
 wandb/
 eq_dataset/
+preds/

@@ -44,7 +44,9 @@ random.seed(args.seed)
 
 # Initialize data and model
 data, out_channels, affiliation_encoder, test_mask = process_data(sample_type=args.sample_type, feature_dim=args.feature_dim, label_num=args.label_num, max_features = args.max_features, seed = args.seed)
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = HANModel(dim_in=-1, dim_h=args.dim_h, dim_out=out_channels, data=data)
+data, model =data.to(device), model.to(device)
 
 # Optimzer and loss
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
