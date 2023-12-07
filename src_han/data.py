@@ -6,7 +6,7 @@ from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 
-def process_data(label_num=2, max_features=100, seed=0, feature_dim=300, sample_type='undersample'):
+def process_data(label_num=2, seed=0, feature_dim=300, sample_type='undersample'):
 
     label_num = str(label_num)
     papers_df = pd.read_csv(f'./dataset/{sample_type}/{label_num}_label/papers_{feature_dim}.csv')

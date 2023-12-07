@@ -8,6 +8,8 @@ parameters:
     values: [0, 1, 2]
   lr:
     values: [0.01, 0.001, 0.0001]
+  heads:
+    values: [6,8]
   dim_h:
     values: [512, 1024]
 command:
@@ -15,5 +17,4 @@ command:
   - ${program}
   - ${args}
   - --sample_type=undersample
-  - --lr=0.01
   - --dim_h=512

@@ -24,14 +24,14 @@ parser.add_argument('--seed', default=0, type=int)
 parser.add_argument('--label_num', default=10, type=int)
 parser.add_argument('--max_features', default=100, type=int)
 parser.add_argument('--lr', default=0.01, type=float)
-parser.add_argument('--max_epoch', default=1000, type=int)
+parser.add_argument('--max_epoch', default=3000, type=int)
 parser.add_argument('--dataset_dir', default='dataset', type=str)
 parser.add_argument('--patience_threshold', default=30, type=int)
 parser.add_argument('--feature_dim', default=300, type=int)
 parser.add_argument('--sample_type', default='undersample', type=str)
 args = parser.parse_args()
 
-wandb.init(project='DM_final', name = f"feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}")
+wandb.init(project='DM_final', name = f"sample_{args.sample_type}_feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_heads_{args.heads}")
 wandb.config.update(args)
 
 torch.manual_seed(args.seed)
@@ -43,7 +43,7 @@ cudnn.deterministic = True
 random.seed(args.seed)
 
 # Initialize data and model
-data, out_channels, affiliation_encoder, test_mask = process_data(sample_type=args.sample_type, feature_dim=args.feature_dim, label_num=args.label_num, max_features = args.max_features, seed = args.seed)
+data, out_channels, affiliation_encoder, test_mask = process_data(label_num=args.label_num, seed = args.seed, feature_dim=args.feature_dim,sample_type=args.sample_type)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = HANModel(dim_in=-1, dim_h=args.dim_h, dim_out=out_channels, data=data)
 data, model =data.to(device), model.to(device)
@@ -98,21 +98,13 @@ def visualize_top_k_predictions(mask, filename, k=2):
     wandb_table = wandb.Table(columns=columns, data=predictions_data)
     wandb.log({"top_k_predictions": wandb_table})
     
+    predictions_data = []
     for idx in torch.where(mask)[0]:
-        # Get the ground truth affiliation for the author
         true_affiliation_index = data['author'].y[idx].item()
         true_affiliation = affiliation_encoder.inverse_transform([true_affiliation_index])[0]
-
-        # Generate a list of predictions with scores
         top_k_predictions = [(affiliation_encoder.inverse_transform([i.item()])[0], v.item()) for i, v in zip(predictions.indices[idx], predictions.values[idx])]
-
-        # Add both ground truth and predictions to the data
         predictions_data.append([idx.item(), true_affiliation, top_k_predictions])
-
-    # Convert predictions_data to DataFrame
     df = pd.DataFrame(predictions_data, columns=["author_id", "ground_truth_affiliation", "top_k_predictions"])
-    
-    # Saving to CSV
     df.to_csv(filename, index=False)
 
 
@@ -171,5 +163,5 @@ print(f'Test Loss: {formatted_loss}, Test Accuracy: {formatted_acc}')
 
 
 # visualize_top_k_predictions(data['author'].test_mask, k=args.top_k)
-filename = f"./preds/feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_pred.csv"
+filename = f"./preds/sample_{args.sample_type}_feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_heads_{args.heads}_pred.csv"
 visualize_top_k_predictions(data['author'].test_mask, k=args.top_k, filename=filename)
