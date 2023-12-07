@@ -1,17 +1,19 @@
 program: src_han/main.py
-name: tfidf
 entity: postech_sinr
 method: grid
 parameters:
-  data_type:
-    values: ['tfidf']
+  feature_dim:
+    values: [300, 500, 1000]
   seed:
     values: [0, 1, 2]
-  label_num:
-    values: [2]
+  lr:
+    values: [0.01, 0.001, 0.0001]
+  dim_h:
+    values: [512, 1024]
 command:
   - python
   - ${program}
   - ${args}
+  - --sample_type=undersample
   - --lr=0.01
   - --dim_h=512

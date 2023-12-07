@@ -24,14 +24,14 @@ parser.add_argument('--seed', default=0, type=int)
 parser.add_argument('--label_num', default=10, type=int)
 parser.add_argument('--max_features', default=100, type=int)
 parser.add_argument('--lr', default=0.01, type=float)
-parser.add_argument('--max_epoch', default=200, type=int)
+parser.add_argument('--max_epoch', default=1000, type=int)
 parser.add_argument('--dataset_dir', default='dataset', type=str)
 parser.add_argument('--patience_threshold', default=30, type=int)
 parser.add_argument('--feature_dim', default=300, type=int)
 parser.add_argument('--sample_type', default='undersample', type=str)
 args = parser.parse_args()
 
-wandb.init(project='DM_final', name = f"feature_{args.feature_dim}_seed_{args.seed}")
+wandb.init(project='DM_final', name = f"feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}")
 wandb.config.update(args)
 
 torch.manual_seed(args.seed)
@@ -72,7 +72,7 @@ def evaluate(mask):
     return loss, acc
 
 
-def visualize_top_k_predictions(mask, k=2):
+def visualize_top_k_predictions(mask, filename, k=2):
     model.eval()
     predictions_data = []
 
@@ -95,6 +95,23 @@ def visualize_top_k_predictions(mask, k=2):
     columns = ["author_id", "ground_truth_affiliation", "predictions"]
     wandb_table = wandb.Table(columns=columns, data=predictions_data)
     wandb.log({"top_k_predictions": wandb_table})
+    
+    for idx in torch.where(mask)[0]:
+        # Get the ground truth affiliation for the author
+        true_affiliation_index = data['author'].y[idx].item()
+        true_affiliation = affiliation_encoder.inverse_transform([true_affiliation_index])[0]
+
+        # Generate a list of predictions with scores
+        top_k_predictions = [(affiliation_encoder.inverse_transform([i.item()])[0], v.item()) for i, v in zip(predictions.indices[idx], predictions.values[idx])]
+
+        # Add both ground truth and predictions to the data
+        predictions_data.append([idx.item(), true_affiliation, top_k_predictions])
+
+    # Convert predictions_data to DataFrame
+    df = pd.DataFrame(predictions_data, columns=["author_id", "ground_truth_affiliation", "top_k_predictions"])
+    
+    # Saving to CSV
+    df.to_csv(filename, index=False)
 
 
 
@@ -102,7 +119,7 @@ def visualize_top_k_predictions(mask, k=2):
 # Variables to track the best validation metrics
 best_val_acc = 0.0
 best_val_loss = float('inf')
-patience, patience_threshold = 0, args.patience_threshold
+patience, patience_threshold = 0, args.max_epoch # no early stopping for now
 
 for epoch in tqdm(range(args.max_epoch), desc="Training Epochs"):
     loss, acc = train()
@@ -152,4 +169,5 @@ print(f'Test Loss: {formatted_loss}, Test Accuracy: {formatted_acc}')
 
 
 # visualize_top_k_predictions(data['author'].test_mask, k=args.top_k)
-visualize_top_k_predictions(data['author'].test_mask, k=args.top_k)
+filename = f"./preds/feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_pred.csv"
+visualize_top_k_predictions(data['author'].test_mask, k=args.top_k, filename=filename)
