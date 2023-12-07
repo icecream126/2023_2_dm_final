@@ -30,7 +30,7 @@ To address this, we analyzed academic papers and their authors, specifically sou
 * keywords
 
 ## Data preprocess
-After we obtain author and paper data, we made a single author node data by joining a *paper_id* column.  Also there was a data imbalancing problem in the original dataset.   
+After we obtained author and paper data, we made a single author node data by joining a *paper_id* column.  Also there was a data imbalancing problem in the original dataset. As a target affiliation label, we used 5-top company affiliations(Google, Microsoft, DeepMind, Facebook, and Amazon) and 5-top academy affiliations(MIT, Stanford Univ, Tsinghua Univ, Carnegie Mellon Univ, and Peking Univ), 10 affiliations in total.
 <p align="center">
     <img src="./figs/affiliation.png" alt="drawing" width="600"/>
 </p>
