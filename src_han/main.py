@@ -34,7 +34,7 @@ data_dict={
     'glove':data_glove.process_data,
 }
 
-wandb.init(project='DM_final')
+wandb.init(project='DM_final', name = args.data_type)
 wandb.config.update(args)
 
 torch.manual_seed(args.seed)

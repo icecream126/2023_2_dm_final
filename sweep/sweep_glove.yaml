@@ -1,0 +1,16 @@
+program: src_han/main.py
+entity: postech_sinr
+method: grid
+parameters:
+  data_type:
+    values: ['glove']
+  seed:
+    values: [0, 1, 2]
+  label_num:
+    values: [2]
+command:
+  - python
+  - ${program}
+  - ${args}
+  - --lr=0.01
+  - --dim_h=512

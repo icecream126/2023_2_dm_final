@@ -1,9 +1,10 @@
 program: src_han/main.py
+name: tfidf
 entity: postech_sinr
 method: grid
 parameters:
   data_type:
-    values: ['tfidf', 'glove']
+    values: ['tfidf']
   seed:
     values: [0, 1, 2]
   label_num:
@@ -14,5 +15,3 @@ command:
   - ${args}
   - --lr=0.01
   - --dim_h=512
-
-  
