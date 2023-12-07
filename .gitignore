@@ -9,3 +9,4 @@ src_han/__pycache__/
 processed/
 raw/
 wandb/
+eq_dataset/

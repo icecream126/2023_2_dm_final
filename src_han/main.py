@@ -10,8 +10,7 @@ import argparse
 from model import HANModel
 # from data_tfidf import process_data
 # from data_glove import process_data
-import data_tfidf
-import data_glove
+from data import *
 import torch.nn as nn
 import os
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
@@ -22,19 +21,17 @@ parser.add_argument('--top_k', default=4, type=int)
 parser.add_argument('--dim_h', default=512, type=int)
 parser.add_argument('--heads', default=8, type=int)
 parser.add_argument('--seed', default=0, type=int)
-parser.add_argument('--label_num', default=2, type=int)
+parser.add_argument('--label_num', default=10, type=int)
 parser.add_argument('--max_features', default=100, type=int)
 parser.add_argument('--lr', default=0.01, type=float)
 parser.add_argument('--max_epoch', default=200, type=int)
-parser.add_argument('--data_type', default='tfidf', type=str)
+parser.add_argument('--dataset_dir', default='dataset', type=str)
+parser.add_argument('--patience_threshold', default=30, type=int)
+parser.add_argument('--feature_dim', default=300, type=int)
+parser.add_argument('--sample_type', default='undersample', type=str)
 args = parser.parse_args()
 
-data_dict={
-    'tfidf':data_tfidf.process_data,
-    'glove':data_glove.process_data,
-}
-
-wandb.init(project='DM_final', name = args.data_type)
+wandb.init(project='DM_final', name = f"feature_{args.feature_dim}_seed_{args.seed}")
 wandb.config.update(args)
 
 torch.manual_seed(args.seed)
@@ -46,7 +43,7 @@ cudnn.deterministic = True
 random.seed(args.seed)
 
 # Initialize data and model
-data, out_channels, affiliation_encoder, test_mask = data_dict[args.data_type](label_num=args.label_num, max_features = args.max_features, seed = args.seed)
+data, out_channels, affiliation_encoder, test_mask = process_data(sample_type=args.sample_type, feature_dim=args.feature_dim, label_num=args.label_num, max_features = args.max_features, seed = args.seed)
 model = HANModel(dim_in=-1, dim_h=args.dim_h, dim_out=out_channels, data=data)
 
 # Optimzer and loss
@@ -105,7 +102,7 @@ def visualize_top_k_predictions(mask, k=2):
 # Variables to track the best validation metrics
 best_val_acc = 0.0
 best_val_loss = float('inf')
-patience, patience_threshold = 0, 10  
+patience, patience_threshold = 0, args.patience_threshold
 
 for epoch in tqdm(range(args.max_epoch), desc="Training Epochs"):
     loss, acc = train()

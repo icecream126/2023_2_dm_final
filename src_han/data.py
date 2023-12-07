@@ -6,11 +6,11 @@ from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 
-def process_data(label_num=2, max_features=100, seed=0):
+def process_data(label_num=2, max_features=100, seed=0, feature_dim=300, sample_type='undersample'):
 
     label_num = str(label_num)
-    papers_df = pd.read_csv(f'./dataset/{label_num}_processed_papers.csv')
-    authors_df = pd.read_csv(f'./dataset/{label_num}_processed_authors.csv')
+    papers_df = pd.read_csv(f'./dataset/{sample_type}/{label_num}_label/papers_{feature_dim}.csv')
+    authors_df = pd.read_csv(f'./dataset/{sample_type}/{label_num}_label/authors.csv')
 
     # One-hot encoding for paper IDs
     paper_id_encoder = OneHotEncoder(sparse=False)
@@ -24,12 +24,15 @@ def process_data(label_num=2, max_features=100, seed=0):
     data = HeteroData()
 
     '''Create paper feature'''
-    # TF-IDF encoding for paper text
-    tfidf_vectorizer = TfidfVectorizer(max_features=max_features)
-    # papers_df['combined_text'] = papers_df['paper_title'] + ' ' + papers_df['paper_area'] + ' ' + papers_df['paper_abstract']
-    papers_df['combined_text'] = papers_df['paper_area'] + ' ' + papers_df['paper_abstract']+ ' ' + papers_df['name']+ ' ' + str(papers_df['year'])
-    tfidf_embeddings = tfidf_vectorizer.fit_transform(papers_df['combined_text']).toarray()
-    data['paper'].x = torch.tensor(tfidf_embeddings, dtype=torch.float)
+
+    filtered_columns = [col for col in papers_df.columns if col.startswith('paper_abstract_filtered_')]
+    filtered_data = papers_df[filtered_columns]
+
+    # Convert the DataFrame to a 2D torch tensor
+    tensor_data = torch.tensor(filtered_data.values, dtype=torch.float32)
+    data['paper'].x = tensor_data
+
+    
 
     '''Create author feature'''
     # One-hot encoding for author position and affiliation type
