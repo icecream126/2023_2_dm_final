@@ -1,13 +1,14 @@
 # 🔗 LinkedIn for AI-Researchers
--[About](#about)
--[Data acquisition](#data-acquisition)
--[Data preprocess](#data-preprocess)
--[Environment setting](#environment-setting)
--[Dataset](#dataset)
--[How to run](#how-to-run)
-    -[XGBoost](#xgboost)
-    -[GAT](#gat)
-
+## Table of Contents
+* [About](#about)
+* [Data acquisition](#data-acquisition)
+* [Data preprocess](#data-preprocess)
+* [Environment setting](#environment-setting)
+* [Dataset](#dataset)
+* [How to run](#how-to-run)
+    * [XGBoost](#xgboost)
+    * [GAT](#gat)
+---
 
 ## About
 Career is a common interest for many AI-researchers. Unlike other job positions, the most important qualification for researchers is research fit with a company. However, it isn't easy to know what would be the company that will fit with one's research. 
