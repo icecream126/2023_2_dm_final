@@ -31,9 +31,10 @@ To address this, we analyzed academic papers and their authors, specifically sou
 
 ## Data preprocess
 After we obtain author and paper data, we made a single author node data by joining a *paper_id* column.  Also there was a data imbalancing problem in the original dataset.   
+<p align="center">
+    <img src="./figs/affiliation.png" alt="drawing" width="300"/>
+</p>
 
-**TODO** 
-![Data imbalancing](./figs/affiliation.png)  
 As can be seen in the figure, most of the author affiliation is *Google*, (which is about ??%).  
 Therefore, we performed oversampling/undersampling to solve the data imbalance problem.
 
