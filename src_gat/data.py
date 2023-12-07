@@ -4,6 +4,8 @@ from torch_geometric.data import Data
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.model_selection import train_test_split
+from torch_geometric.transforms import VirtualNode
+
 import os
 
 def process_data(label_num=10, seed=0, feature_dim=300, sample_type='undersample'):
@@ -25,6 +27,7 @@ def process_data(label_num=10, seed=0, feature_dim=300, sample_type='undersample
     # Create train, valid, test mask
     train_idx, test_idx = train_test_split(range(len(df)), test_size=0.2, random_state=seed, shuffle=True)
     train_idx, val_idx = train_test_split(train_idx, test_size=0.25, random_state=seed, shuffle=True)
+    
     train_mask = torch.zeros(len(df), dtype=torch.bool)
     train_mask[train_idx] = True
     val_mask = torch.zeros(len(df), dtype=torch.bool)
@@ -61,6 +64,8 @@ def process_data(label_num=10, seed=0, feature_dim=300, sample_type='undersample
         data.val_mask = val_mask
         data.test_mask = test_mask
         
+        virtual_node_transform = VirtualNode(num_classes=out_channels)
+        data = virtual_node_transform(data)
 
         torch.save(data, savepath)
 
