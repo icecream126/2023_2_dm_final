@@ -15,6 +15,8 @@ import data
 import data_random_edge
 import data_virtual_node
 import pandas as pd
+import torch.nn.functional as F
+
 
 import torch.nn as nn
 import os
@@ -37,6 +39,8 @@ parser.add_argument('--sample_type', default='undersample', type=str)
 parser.add_argument('--dropout', default=0.6, type=float)
 parser.add_argument('--data_aug', default='rand_edge', type=str)
 parser.add_argument('--model', default='GAT', type=str)
+parser.add_argument('--step_size', default=0.5, type=float)
+parser.add_argument('--m', default=3, type=int)
 parser.add_argument('--p',default=0.01, type=float, help='Probability for random edge')
 args = parser.parse_args()
 
@@ -71,18 +75,65 @@ data, model =data.to(device), model.to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 criterion = nn.CrossEntropyLoss()
 
-
-def train():
+def flag(model_forward, perturb_shape, y, args, optimizer, device, criterion, mask) :
+    model, forward = model_forward
     model.train()
     optimizer.zero_grad()
-    out = model(data.x, data.edge_index)
-    mask = data.train_mask
-    loss = criterion(out[mask], data.y[mask])
+
+    perturb = torch.FloatTensor(*perturb_shape).uniform_(-args.step_size, args.step_size).to(device)
+    perturb.requires_grad_()
+    out = forward(perturb)
+    loss = criterion(out, y)
+    loss /= args.m
+
+    for _ in range(args.m-1):
+        loss.backward()
+        perturb_data = perturb.detach() + args.step_size * torch.sign(perturb.grad.detach())
+        perturb.data = perturb_data.data
+        perturb.grad[:] = 0
+
+        out = forward(perturb)
+        loss = criterion(out, y)
+        loss /= args.m
+        # pred = out.argmax(dim=1)
+        # acc = (pred[mask] == data.y[mask]).sum() / mask.sum()
+        # acc /= args.m
+        
+
     loss.backward()
     optimizer.step()
+
+    return loss, out
+
+# def train():
+#     model.train()
+#     optimizer.zero_grad()
+#     out = model(data.x, data.edge_index)
+#     mask = data.train_mask
+#     loss = criterion(out[mask], data.y[mask])
+#     loss.backward()
+#     optimizer.step()
+#     pred = out.argmax(dim=1)
+#     acc = (pred[mask] == data.y[mask]).sum() / mask.sum()
+#     return loss.item(), acc
+
+
+
+def train(model, data, optimizer, device, args):
+    
+    # y = data.y.squeeze(1)[train_idx]
+    mask = data.train_mask
+    y = data.y[mask]
+    forward = lambda perturb : model(data.x+perturb, data.edge_index)[mask]
+    model_forward = (model, forward)
+
+    loss, out = flag(model_forward, data.x.shape, y, args, optimizer, device, criterion=criterion, mask=mask)
     pred = out.argmax(dim=1)
-    acc = (pred[mask] == data.y[mask]).sum() / mask.sum()
+    acc = (pred == y).sum() / mask.sum()
+    
+
     return loss.item(), acc
+
 
 def evaluate(mask):
     model.eval()
@@ -136,7 +187,7 @@ best_val_loss = float('inf')
 patience, patience_threshold = 0, args.max_epoch # no early stopping for now
 
 for epoch in tqdm(range(args.max_epoch), desc="Training Epochs"):
-    loss, acc = train()
+    loss, acc = train(model=model, data = data, optimizer=optimizer, device=device, args=args)
     val_loss, val_acc = evaluate(data.val_mask)
     
         

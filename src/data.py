@@ -10,7 +10,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 
 
-def process_data():
+def process_data(label_num=10, seed=0, feature_dim=300, sample_type='undersample', data_aug=None, p=0.01):
 
     papers_df = pd.read_csv('./dataset/processed_papers.csv')
     authors_df = pd.read_csv('./dataset/processed_authors.csv')

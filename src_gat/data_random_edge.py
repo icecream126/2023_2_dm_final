@@ -5,12 +5,16 @@ import numpy as np
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.model_selection import train_test_split
 from torch_geometric.transforms import VirtualNode
+from torch_geometric.utils import to_undirected
 
 import os
 
 def process_data(label_num=10, seed=0, feature_dim=300, sample_type='undersample', data_aug=None, p=0.01):
     
-    savepath = f'./dataset/graph/{sample_type}/{label_num}_label/data.pt'
+    if data_aug != 'data':
+        savepath = f'./dataset/graph/{sample_type}/{data_aug}/{label_num}_label/data.pt'
+    else:
+        savepath = f'./dataset/graph/{sample_type}/{label_num}_label/data.pt'
     df = pd.read_csv(f'./dataset/merged/data_{feature_dim}.csv')
     
     # Create paper feature
@@ -55,8 +59,14 @@ def process_data(label_num=10, seed=0, feature_dim=300, sample_type='undersample
                         edge_index.append([author_id_to_index[authors[i]], author_id_to_index[authors[j]]])
                         edge_index.append([author_id_to_index[authors[j]], author_id_to_index[authors[i]]])
 
+        edge_index = torch.tensor(edge_index, dtype=torch.long).t()
+        if data_aug=='rand_edge':
+            edge_index_to_add = torch.randint(0, torch.max(edge_index), (2, int(edge_index.shape[1]*p)), dtype=torch.long)
+            edge_index_to_add = to_undirected(edge_index_to_add)
+            edge_index = torch.cat([edge_index, edge_index_to_add], dim=1)
 
-        edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
+        
+        edge_index = edge_index.contiguous()
 
         # Create Data object
         data = Data(x=tensor_data, edge_index=edge_index, y=author_labels)
@@ -64,8 +74,9 @@ def process_data(label_num=10, seed=0, feature_dim=300, sample_type='undersample
         data.val_mask = val_mask
         data.test_mask = test_mask
         
-        virtual_node_transform = VirtualNode(num_classes=out_channels)
-        data = virtual_node_transform(data)
+        if data_aug == 'virtual_node':
+            virtual_node_transform = VirtualNode()
+            data = virtual_node_transform(data)
 
         torch.save(data, savepath)
 
