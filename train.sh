@@ -18,3 +18,9 @@ CUDA_VISIBLE_DEVICES=1 python src_gat/main.py --data_aug oversample --feature_di
 
 CUDA_VISIBLE_DEVICES=2 python src_gat/main.py --data_aug oversample --feature_dim 500 --lr 0.001
 CUDA_VISIBLE_DEVICES=3 python src_gat/main.py --data_aug oversample --feature_dim 500 --lr 0.005
+
+CUDA_VISIBLE_DEVICES=0 python src_gat/main.py --data_aug oversample --feature_dim 500 --lr 0.006
+
+CUDA_VISIBLE_DEVICES=0 python src_gat/main.py --data_aug oversample --feature_dim 500 --lr 0.007
+CUDA_VISIBLE_DEVICES=1 python src_gat/main.py --data_aug oversample --feature_dim 500 --lr 0.008
+CUDA_VISIBLE_DEVICES=2 python src_gat/main.py --data_aug oversample --feature_dim 500 --lr 0.009

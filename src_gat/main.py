@@ -9,13 +9,15 @@ import argparse
 from wrapper import PyTorchClassifierWrapper
 
 from model import GAT
+from datetime import datetime
 # from data_tfidf import process_data
 # from data_glove import process_data
-import data
+import data_undersample
 import data_random_edge
 import data_oversample
 import data_virtual_node
 import pandas as pd
+import data
 
 import torch.nn as nn
 import os
@@ -42,13 +44,14 @@ parser.add_argument('--p',default=0.01, type=float, help='Probability for random
 args = parser.parse_args()
 
 dataset_dict={
-    "data":data,
+    "undersample":data_undersample,
     "rand_edge":data_random_edge,
     "virtual_node":data_virtual_node,
     "oversample":data_oversample,
 }
 
-wandb.init(project='DM_final', name = f"sample_{args.sample_type}_dropout_{args.dropout}_feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_heads_{args.heads}")
+# wandb.init(project='DM_final', name = f"dropout_{args.dropout}_feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_heads_{args.heads}")
+wandb.init(project='DM_final', name = f"dropout_{args.dropout}_feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_heads_{args.heads}")
 wandb.config.update(args)
 
 torch.manual_seed(args.seed)
@@ -60,7 +63,8 @@ cudnn.deterministic = True
 random.seed(args.seed)
 
 # Initialize data and model
-data, out_channels, affiliation_encoder, test_mask = dataset_dict[args.data_aug].process_data(label_num=args.label_num, seed = args.seed, feature_dim=args.feature_dim,sample_type=args.sample_type, data_aug = args.data_aug)
+# data, out_channels, affiliation_encoder, test_mask = dataset_dict[args.data_aug].process_data(label_num=args.label_num, seed = args.seed, feature_dim=args.feature_dim,sample_type=args.sample_type, data_aug = args.data_aug)
+data, out_channels, affiliation_encoder, test_mask = data.process_data(label_num=args.label_num, seed = args.seed, feature_dim=args.feature_dim,sample_type=args.sample_type, data_aug = args.data_aug)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 in_channels = data.x.shape[1]
@@ -137,6 +141,10 @@ best_val_acc = 0.0
 best_val_loss = float('inf')
 patience, patience_threshold = 0, args.max_epoch # no early stopping for now
 
+# current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+BEST_MODEL_PATH = f"./best_model/dropout_{args.dropout}_feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_heads_{args.heads}"
+
 for epoch in tqdm(range(args.max_epoch), desc="Training Epochs"):
     loss, acc = train()
     val_loss, val_acc = evaluate(data.val_mask)
@@ -146,6 +154,8 @@ for epoch in tqdm(range(args.max_epoch), desc="Training Epochs"):
     if val_acc > best_val_acc:
         best_val_acc = val_acc
         wandb.log({"best_val_acc": best_val_acc})
+        torch.save(model.state_dict(), BEST_MODEL_PATH)  # Save the model
+
     if val_loss < best_val_loss:
         best_val_loss = val_loss
         wandb.log({"best_val_loss": best_val_loss})
@@ -172,6 +182,8 @@ for epoch in tqdm(range(args.max_epoch), desc="Training Epochs"):
     
     print(f'Epoch: {epoch}, Acc: {formatted_acc}, Loss: {formatted_loss}, Val Loss: {formatted_val_loss}, Val Acc: {formatted_val_acc}')
 
+model.load_state_dict(torch.load(BEST_MODEL_PATH))
+
 test_loss, test_acc = evaluate(data.test_mask)
 formatted_loss = f"{test_loss:.4f}"
 formatted_acc = f"{test_acc:.4f}"
@@ -185,5 +197,5 @@ print(f'Test Loss: {formatted_loss}, Test Accuracy: {formatted_acc}')
 
 
 # visualize_top_k_predictions(data['author'].test_mask, k=args.top_k)
-filename = f"./preds/sample_{args.sample_type}_dropout_{args.dropout}_feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_heads_{args.heads}_pred.csv"
+filename = f"./preds/dropout_{args.dropout}_feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_heads_{args.heads}_pred.csv"
 visualize_top_k_predictions(data.test_mask, k=args.top_k, filename=filename)

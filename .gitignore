@@ -12,3 +12,4 @@ wandb/
 eq_dataset/
 preds/
 src_gat/__pycache__/
+best_model/

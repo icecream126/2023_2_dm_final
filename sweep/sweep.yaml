@@ -1,20 +1,19 @@
-program: src_han/main.py
+program: src_gat/main.py
 entity: postech_sinr
 method: grid
 parameters:
   feature_dim:
-    values: [300, 500, 1000]
+    values: [1000]
   seed:
     values: [0, 1, 2]
   lr:
-    values: [0.01, 0.001, 0.0001]
+    values: [0.005, 0.004, 0.003]
   dropout:
-    values: [0.5, 0.6, 0.7]
+    values: [0.5, 0.4, 0.3]
   dim_h:
-    values: [256, 512]
+    values: [512, 1024]
 command:
   - python
   - ${program}
   - ${args}
-  - --sample_type=undersample
-  - --dim_h=512
+  - --max_epoch=4000
