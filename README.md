@@ -1,4 +1,4 @@
-# LinkedIn for AI-Researchers
+# 🔗 LinkedIn for AI-Researchers
 
 ## Environment setting
 * NVCC : 11.6
