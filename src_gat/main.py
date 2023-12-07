@@ -8,7 +8,7 @@ import wandb
 import argparse
 from wrapper import PyTorchClassifierWrapper
 
-from model import HANModel
+from model import GAT
 # from data_tfidf import process_data
 # from data_glove import process_data
 from data import *
@@ -47,7 +47,11 @@ random.seed(args.seed)
 # Initialize data and model
 data, out_channels, affiliation_encoder, test_mask = process_data(label_num=args.label_num, seed = args.seed, feature_dim=args.feature_dim,sample_type=args.sample_type)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = HANModel(dim_in=-1, dim_h=args.dim_h, dim_out=out_channels, data=data, dropout=args.dropout)
+
+in_channels = data.x.shape[1]
+out_channels = len(np.unique(data.y.numpy()))  # Number of unique labels
+
+model = GAT(in_channels=in_channels, hidden_channels=args.dim_h, out_channels=out_channels, heads=args.heads, dropout=args.dropout)
 data, model =data.to(device), model.to(device)
 
 # Optimzer and loss
@@ -63,22 +67,22 @@ wrapper = PyTorchClassifierWrapper(model, criterion, optimizer)
 def train():
     model.train()
     optimizer.zero_grad()
-    out = model(data.x_dict, data.edge_index_dict)# ['author'][data['author'].train_mask]
-    mask = data['author'].train_mask
-    loss = criterion(out[mask], data['author'].y[mask])
+    out = model(data.x, data.edge_index)# ['author'][data['author'].train_mask]
+    mask = data.train_mask
+    loss = criterion(out[mask], data.y[mask])
     loss.backward()
     optimizer.step()
     pred = out.argmax(dim=1)
-    acc = (pred[mask] == data['author'].y[mask]).sum() / mask.sum()
+    acc = (pred[mask] == data.y[mask]).sum() / mask.sum()
     return loss.item(), acc
 
 def evaluate(mask):
     model.eval()
     with torch.no_grad():
-        out = model(data.x_dict, data.edge_index_dict)# ['author'][mask]
-        loss = criterion(out[mask], data['author'].y[mask]).item()
+        out = model(data.x, data.edge_index)# ['author'][mask]
+        loss = criterion(out[mask], data.y[mask]).item()
         pred = out.argmax(dim=1)
-        acc = (pred[mask] == data['author'].y[mask]).sum() / mask.sum()
+        acc = (pred[mask] == data.y[mask]).sum() / mask.sum()
     return loss, acc
 
 
@@ -92,7 +96,7 @@ def visualize_top_k_predictions(mask, filename, k=2):
 
     for idx in torch.where(mask)[0][:5]:  # Visualize for the first 5 authors in the mask
         # Get the ground truth affiliation for the author
-        true_affiliation_index = data['author'].y[idx].item()
+        true_affiliation_index = data.y[idx].item()
         true_affiliation = affiliation_encoder.inverse_transform([true_affiliation_index])[0]
 
         # Generate a string of predictions with scores
@@ -108,7 +112,7 @@ def visualize_top_k_predictions(mask, filename, k=2):
     
     predictions_data = []
     for idx in torch.where(mask)[0]:
-        true_affiliation_index = data['author'].y[idx].item()
+        true_affiliation_index = data.y[idx].item()
         true_affiliation = affiliation_encoder.inverse_transform([true_affiliation_index])[0]
         top_k_predictions = [(affiliation_encoder.inverse_transform([i.item()])[0], v.item()) for i, v in zip(predictions.indices[idx], predictions.values[idx])]
         predictions_data.append([idx.item(), true_affiliation, top_k_predictions])
@@ -125,7 +129,7 @@ patience, patience_threshold = 0, args.max_epoch # no early stopping for now
 
 for epoch in tqdm(range(args.max_epoch), desc="Training Epochs"):
     loss, acc = train()
-    val_loss, val_acc = evaluate(data['author'].val_mask)
+    val_loss, val_acc = evaluate(data.val_mask)
     
         
     # Update best metrics and log them if improved
@@ -158,7 +162,7 @@ for epoch in tqdm(range(args.max_epoch), desc="Training Epochs"):
     
     print(f'Epoch: {epoch}, Acc: {formatted_acc}, Loss: {formatted_loss}, Val Loss: {formatted_val_loss}, Val Acc: {formatted_val_acc}')
 
-test_loss, test_acc = evaluate(data['author'].test_mask)
+test_loss, test_acc = evaluate(data.test_mask)
 formatted_loss = f"{test_loss:.4f}"
 formatted_acc = f"{test_acc:.4f}"
 
@@ -172,4 +176,4 @@ print(f'Test Loss: {formatted_loss}, Test Accuracy: {formatted_acc}')
 
 # visualize_top_k_predictions(data['author'].test_mask, k=args.top_k)
 filename = f"./preds/sample_{args.sample_type}_dropout_{args.dropout}_feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_heads_{args.heads}_pred.csv"
-visualize_top_k_predictions(data['author'].test_mask, k=args.top_k, filename=filename)
+visualize_top_k_predictions(data.test_mask, k=args.top_k, filename=filename)

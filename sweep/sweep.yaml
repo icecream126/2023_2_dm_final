@@ -9,9 +9,9 @@ parameters:
   lr:
     values: [0.01, 0.001, 0.0001]
   dropout:
-    values: [0.5, 0.6, 0.4]
+    values: [0.5, 0.6, 0.7]
   dim_h:
-    values: [512, 1024]
+    values: [256, 512]
 command:
   - python
   - ${program}

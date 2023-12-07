@@ -11,3 +11,4 @@ raw/
 wandb/
 eq_dataset/
 preds/
+src_gat/__pycache__/
