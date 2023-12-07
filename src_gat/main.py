@@ -58,16 +58,11 @@ data, model =data.to(device), model.to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 criterion = nn.CrossEntropyLoss()
 
-# Define wrapper to use RFECV
-wrapper = PyTorchClassifierWrapper(model, criterion, optimizer)
-
-
-
 
 def train():
     model.train()
     optimizer.zero_grad()
-    out = model(data.x, data.edge_index)# ['author'][data['author'].train_mask]
+    out = model(data.x, data.edge_index)
     mask = data.train_mask
     loss = criterion(out[mask], data.y[mask])
     loss.backward()
@@ -79,7 +74,7 @@ def train():
 def evaluate(mask):
     model.eval()
     with torch.no_grad():
-        out = model(data.x, data.edge_index)# ['author'][mask]
+        out = model(data.x, data.edge_index)
         loss = criterion(out[mask], data.y[mask]).item()
         pred = out.argmax(dim=1)
         acc = (pred[mask] == data.y[mask]).sum() / mask.sum()
