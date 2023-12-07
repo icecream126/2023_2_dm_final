@@ -8,8 +8,6 @@ import wandb
 import argparse
 
 from model import GAT, HAN
-import data_random_edge
-import data_virtual_node
 import pandas as pd
 import data_gat
 import data_han
