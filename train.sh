@@ -1,5 +1,5 @@
 # GAT reproduce
-CUDA_VISIBLE_DEVICES=0 python src/main.py \
+CUDA_VISIBLE_DEVICES=0 python GAT/main.py \
     --dropout 0.4 \
     --feature_dim 1000 \
     --seed 0 \
