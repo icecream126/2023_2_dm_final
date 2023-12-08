@@ -21,9 +21,10 @@ To address this, we analyzed academic papers and their authors, specifically sou
 ### Data feature
 
 
-|---------||-----------|-----------|------|-----------|-------------|-------------|
-| Author  || author_id | affiliation |      |           |             |
-| Paper   || paper_id  | year      | abstract  | keywords    |             |
+|    Type    |   Feature 1   | Feature 2   | Feature 3   |  Feature 4 | Feature 5 |  
+|:------:|:---------:|:----------:|:------:|:--------:|:--------:|  
+| **Author** | author_id | affiliation|      |          |           |
+| **Paper**  | paper_id  |     year       | abstract | keywords |   |  
 
 
 ## Data preprocess
