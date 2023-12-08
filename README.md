@@ -35,14 +35,14 @@ To address this, we analyzed academic papers and their authors, specifically sou
 ### Data feature
 
 #### Author feature
-|    Type    |   Feature 1   | Feature 2   | Feature 3   |  Feature 4 | Feature 5 |  
-|:------:|:---------:|:----------:|:------:|:--------:|:--------:|  
-| **Author** | author_id | affiliation|      |          |           |
+|    Type    |   Feature 1   | Feature 2   | Feature 3   |  Feature 4 | Feature 5 |  Feature 6 |  
+|:------:|:---------:|:----------:|:------:|:--------:|:--------:|:--------:|  
+| **Author** | author_id | author_name |  author_position  | author_affiliation  |   author_affiliation_type  | paper_id |
 
 #### Paper feature
-|    Type    |   Feature 1   | Feature 2   | Feature 3   |  Feature 4 | Feature 5 |  
-|:------:|:---------:|:----------:|:------:|:--------:|:--------:|  
-| **Paper**  | paper_id  |     year       | abstract | keywords |   |  
+|    Type    |   Feature 1   | Feature 2   | Feature 3   |  Feature 4 | Feature 5 |   Feature 6   | Feature 7   | Feature 8   |  Feature 9 | Feature 10   | Feature 11   |  Feature 12 | Feature 13 |  
+|:------:|:---------:|:----------:|:------:|:--------:|:--------:|  :---------:|:----------:|:------:|:--------:|:--------:|  :------:|:--------:|:--------:|  
+| **Paper**  | paper_id  | name  | year | paper_number |  paper_venue |  paper_title  | paper_area | paper_keywords | paper_abstract |  paper_area | paper_title_tk | paper_keywords_tk |  paper_abstract_tk |  
 
 
 ## Data preprocess
@@ -86,14 +86,13 @@ CUDA_VISIBLE_DEVICES=0 python GAT/main.py \
 
 ## Performance
 This is average accuracy over 3 seeds.
-* XGBoost :
-    * Top-1 : 82.2%
-    * Top-3 : 100%
-    * Top-5 : 100%
-* GAT 
-    * Top-1 : 55%
-    * Top-3 : 72.9%
-    * Top-5 : 82.5%
+
+| Model   | Top-1 Accuracy | Top-3 Accuracy | Top-5 Accuracy |
+|---------|----------------|----------------|----------------|
+| XGBoost | 82.2%          | 100%           | 100%           |
+| GAT     | 55%            | 72.9%          | 82.5%          |
+
+
 
 ### Analysis
 Surprisingly, traditional machine learning approach (XGBoost) shows better performance than modern GNN models.  
