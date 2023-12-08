@@ -18,14 +18,13 @@ To address this, we analyzed academic papers and their authors, specifically sou
 ## Data acquisition 
 **TODO** : Write about data acquisition and add source code. Write feature in table format.
 
-### Author feature
-* author_id
-* name
-### Paper feature
-* paper_id
-* year
-* abstract
-* keywords
+### Data feature
+
+
+|---------||-----------|-----------|------|-----------|-------------|-------------|
+| Author  || author_id | affiliation |      |           |             |
+| Paper   || paper_id  | year      | abstract  | keywords    |             |
+
 
 ## Data preprocess
 After we obtained author and paper data, we made a single author node data by joining a *paper_id* column.  Also there was a data imbalancing problem in the original dataset. As a target affiliation label, we used 5-top company affiliations(Google, Microsoft, DeepMind, Facebook, and Amazon) and 5-top academy affiliations(MIT, Stanford Univ, Tsinghua Univ, Carnegie Mellon Univ, and Peking Univ), 10 affiliations in total.
