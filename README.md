@@ -68,7 +68,8 @@ We provide our dataset [here](https://drive.google.com/drive/folders/1kS5mJAHnnp
 For reproducibility, simply change the *seed* into 0,1 and 2 and calculate the average accuracy.
 ### XGBoost
 ```
-
+CUDA_VISIBLE_DEVICES=0 python run_xgboost.py \
+    --seed 0
 ```
 
 ### GAT
@@ -106,6 +107,6 @@ Given the highly disconnected nature of our data, Graph Neural Networks (GNNs) p
 
 
 ### Trials and future work
-In attempts to mitigate this issue, we experimented with strategies like random edge addition, virtual node introduction, and graph data augmentation [FLAG](https://github.com/devnkong/FLAG/tree/main) but these approaches unfortunately reduced model performance.   
+In attempts to mitigate this issue in GNN(GAT), we experimented with strategies like random edge addition, virtual node introduction, and graph data augmentation [FLAG](https://github.com/devnkong/FLAG/tree/main) but these approaches unfortunately reduced model performance.   
 
 Moving forward, our focus will be on developing GNNs tailored for highly disconnected graphs. This advancement aims to better capture the inter-node relationships, mirroring human networks, which are crucial in career selection processes.
