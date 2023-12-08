@@ -72,6 +72,17 @@ optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 criterion = nn.CrossEntropyLoss()
 
 
+def top_k_accuracy(outputs, labels, k=5):
+    # Get the top k predictions from the outputs
+    topk_preds = torch.topk(outputs, k, dim=1).indices
+
+    # Check if the true labels are in the top k predictions
+    correct = topk_preds.eq(labels.view(-1, 1).expand_as(topk_preds))
+
+    # Calculate top k accuracy
+    topk_acc = correct.sum().float() / labels.size(0)
+    return topk_acc
+
 def train():
     model.train()
     optimizer.zero_grad()
@@ -81,8 +92,12 @@ def train():
     loss.backward()
     optimizer.step()
     pred = out.argmax(dim=1)
-    acc = (pred[mask] == data.y[mask]).sum() / mask.sum()
-    return loss.item(), acc
+    correct =(pred[mask] == data.y[mask])
+    acc = correct.sum() / mask.sum()
+
+    top_acc_3 = top_k_accuracy(out[mask], data.y[mask], k=3)
+    top_acc_5 = top_k_accuracy(out[mask], data.y[mask], k=5)
+    return loss.item(), acc, top_acc_3, top_acc_5
 
 def evaluate(mask):
     model.eval()
@@ -91,7 +106,10 @@ def evaluate(mask):
         loss = criterion(out[mask], data.y[mask]).item()
         pred = out.argmax(dim=1)
         acc = (pred[mask] == data.y[mask]).sum() / mask.sum()
-    return loss, acc
+        
+        top_acc_3 = top_k_accuracy(out[mask], data.y[mask], k=3)
+        top_acc_5 = top_k_accuracy(out[mask], data.y[mask], k=5)
+    return loss, acc, top_acc_3, top_acc_5
 
 
 def visualize_top_k_predictions(mask, filename, k=2):
@@ -140,8 +158,8 @@ patience, patience_threshold = 0, args.max_epoch # no early stopping for now
 BEST_MODEL_PATH = f"./best_model/dropout_{args.dropout}_feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_heads_{args.heads}"
 
 for epoch in tqdm(range(args.max_epoch), desc="Training Epochs"):
-    loss, acc = train()
-    val_loss, val_acc = evaluate(data.val_mask)
+    loss, acc, top_acc_3, top_acc_5 = train()
+    val_loss, val_acc, val_top_acc_3, val_top_acc_5 = evaluate(data.val_mask)
     
         
     # Update best metrics and log them if improved
@@ -164,30 +182,42 @@ for epoch in tqdm(range(args.max_epoch), desc="Training Epochs"):
     
     formatted_loss = f"{loss:.4f}"
     formatted_acc = f"{acc:.4f}"
+    formatted_top_acc_3 = f"{top_acc_3:.4f}"
+    formatted_top_acc_5 = f"{top_acc_5:.4f}"
     formatted_val_loss = f"{val_loss:.4f}"
     formatted_val_acc = f"{val_acc:.4f}"
+    formatted_val_top_acc_3 = f"{val_top_acc_3:.4f}"
+    formatted_val_top_acc_5 = f"{val_top_acc_5:.4f}"
     
     wandb.log({
         "train_loss":loss,
         "train_acc":acc,
+        "train_top_acc_3":top_acc_3,
+        "train_top_acc_5":top_acc_5,
         "val_loss":val_loss,
-        "val_acc":val_acc
+        "val_acc":val_acc,
+        "val_top_acc_3":val_top_acc_3,
+        "val_top_acc_5":val_top_acc_5,
     })
     
     print(f'Epoch: {epoch}, Acc: {formatted_acc}, Loss: {formatted_loss}, Val Loss: {formatted_val_loss}, Val Acc: {formatted_val_acc}')
 
 model.load_state_dict(torch.load(BEST_MODEL_PATH))
 
-test_loss, test_acc = evaluate(data.test_mask)
+test_loss, test_acc, test_top_acc_3, test_top_acc_5 = evaluate(data.test_mask)
 formatted_loss = f"{test_loss:.4f}"
 formatted_acc = f"{test_acc:.4f}"
+formatted_top_acc_3 = f"{test_top_acc_3:.4f}"
+formatted_top_acc_5 = f"{test_top_acc_5:.4f}"
 
 wandb.log({
     "test_loss":test_loss,
     "test_acc":test_acc,
+    "test_top_acc_3":test_top_acc_3,
+    "test_top_acc_5":test_top_acc_5,
 })
 
-print(f'Test Loss: {formatted_loss}, Test Accuracy: {formatted_acc}')
+print(f'Test Loss: {formatted_loss}, Test Accuracy: {formatted_acc}, TOP-3: {formatted_top_acc_3}, TOP-5: {formatted_top_acc_5}')
 
 
 # visualize_top_k_predictions(data['author'].test_mask, k=args.top_k)

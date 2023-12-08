@@ -11,3 +11,4 @@ wandb/
 eq_dataset/
 preds/
 best_model/
+*.pyc
