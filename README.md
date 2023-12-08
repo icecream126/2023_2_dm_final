@@ -99,7 +99,7 @@ This is average accuracy over 3 seeds.
 | Model   | Top-1 Accuracy | Top-3 Accuracy | Top-5 Accuracy |
 |---------|----------------|----------------|----------------|
 | XGBoost | 83.0%          | 100%           | 100%           |
-| GAT     | 55%            | 73.2%          | 82.8%          |
+| GAT     | 54.5%          | 73.2%          | 82.8%          |
 
 
 
