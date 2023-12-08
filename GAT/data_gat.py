@@ -15,7 +15,7 @@ import os
 
 def process_data(label_num=10, seed=0, feature_dim=500, sample_type='undersample', data_aug=None, p=0.01):
     
-    savepath = './dataset/graph/undersample/10_label/data.pt'
+    savepath = f'./dataset/graph/{feature_dim}/{sample_type}/10_label/data.pt'
     df = pd.read_csv(f'./dataset/merged/data_{feature_dim}.csv')
     
     df_x = df[[col for col in df.columns if 'paper_abstract_filtered' in col]]
