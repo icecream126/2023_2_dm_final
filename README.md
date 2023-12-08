@@ -2,6 +2,7 @@
 ## Table of Contents
 * [About](#about)
 * [Data acquisition](#data-acquisition)
+* [Data feature](#data-feature)
 * [Data preprocess](#data-preprocess)
 * [Environment setting](#environment-setting)
 * [Dataset](#dataset)
@@ -46,7 +47,11 @@ To address this, we analyzed academic papers and their authors, specifically sou
 
 
 ## Data preprocess
-After we obtained author and paper data, we made a single author node data by joining a *paper_id* column.  Also there was a data imbalancing problem in the original dataset. As a target affiliation label, we used 5-top company affiliations(Google, Microsoft, DeepMind, Facebook, and Amazon) and 5-top academy affiliations(MIT, Stanford Univ, Tsinghua Univ, Carnegie Mellon Univ, and Peking Univ), 10 affiliations in total.
+We started by combining author and paper information, linking them together with a paper_id column to create a single dataset for each author.
+
+We picked the most common words from abstracts, focusing on the top-n (n={300, 500, 1000}) words. For each record, we counted how many of these top words it had. If a word was found, we marked it as 1, and if it wasn't, we marked it as 0. This gave us a set of binary values (1s and 0s) for each record, which we used as our main features. In simple terms, our features were based on the words used in the abstracts.
+
+We also noticed that the original dataset was unbalanced in terms of affiliations. To deal with this, we chose the five most common company affiliations (Google, Microsoft, DeepMind, Facebook, and Amazon) and the five most common university affiliations (MIT, Stanford University, Tsinghua University, Carnegie Mellon University, and Peking University), making a total of 10 affiliations for our analysis.
 <p align="center">
     <img src="./figs/affiliation.png" alt="drawing" width="600"/>
 </p>
@@ -63,6 +68,9 @@ conda env create --file environment.yaml
 
 ## Dataset
 We provide our dataset [here](https://drive.google.com/drive/folders/1kS5mJAHnnpPLVAxf5LwrOYpMn0Wdm8Im?usp=sharing). Please download *dataset* folder and place it in your working directory.
+
+## Method
+In our study, we utilized two well-known and effective machine learning models, XGBoost and Graph Attention Networks (GAT), which are widely recognized for their strength in recommendation tasks. These models were carefully trained with the specific goal of predicting an author's affiliation accurately. To provide a more tailored recommendation, we employed top-k prediction. This approach allows the models to suggest the most likely affiliations for an author, offering a range of possibilities ranked by their probability. By doing so, we aimed to ensure that the recommendations are both relevant and diverse, reflecting the varied nature of potential affiliations an author might have.
 
 ## How to run
 For reproducibility, simply change the *seed* into 0,1 and 2 and calculate the average accuracy.
@@ -94,7 +102,7 @@ This is average accuracy over 3 seeds.
 
 
 
-### Analysis
+## Analysis
 Surprisingly, traditional machine learning approach (XGBoost) shows better performance than modern GNN models.  
 We analyze the data and found that our data is highly disconnected which hinders message passing between the most of the nodes and prone to overfitting in a few subgraphs.
 
@@ -108,4 +116,5 @@ Given the highly disconnected nature of our data, Graph Neural Networks (GNNs) p
 ### Trials and future work
 In attempts to mitigate this issue in GNN(GAT), we experimented with strategies like random edge addition, virtual node introduction, and graph data augmentation [FLAG](https://github.com/devnkong/FLAG/tree/main) but these approaches unfortunately reduced model performance.   
 
-Moving forward, our focus will be on developing GNNs tailored for highly disconnected graphs. This advancement aims to better capture the inter-node relationships, mirroring human networks, which are crucial in career selection processes.
+Moving forward, our focus will be on developing GNNs tailored for highly disconnected graphs. This advancement aims to better capture the inter-node relationships, mirroring human networks, which are crucial in career selection processes.  
+Also we would like to utilize more data features such as paper title and keywords.
