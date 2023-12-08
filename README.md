@@ -6,10 +6,8 @@
 * [Environment setting](#environment-setting)
 * [Dataset](#dataset)
 * [How to run](#how-to-run)
-    * [XGBoost](#xgboost)
-    * [GAT](#gat)
 * [Performance](#performance)
-    * [Analysis](#analysis)
+* [Analysis](#analysis)
 ---
 
 ## About
