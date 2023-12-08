@@ -86,7 +86,9 @@ CUDA_VISIBLE_DEVICES=0 python GAT/main.py \
 ## Performance
 This is average accuracy over 3 seeds.
 * XGBoost :
-    * Top-1 : 
+    * Top-1 : 82.2%
+    * Top-3 : 100%
+    * Top-5 : 100%
 * GAT 
     * Top-1 : 55%
     * Top-3 : 72.9%
