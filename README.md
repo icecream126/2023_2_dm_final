@@ -6,6 +6,7 @@
 * [Data preprocess](#data-preprocess)
 * [Environment setting](#environment-setting)
 * [Dataset](#dataset)
+* [Method](#method)
 * [How to run](#how-to-run)
 * [Performance](#performance)
 * [Analysis](#analysis)
