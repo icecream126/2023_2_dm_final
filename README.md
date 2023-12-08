@@ -20,10 +20,14 @@ To address this, we analyzed academic papers and their authors, specifically sou
 
 ### Data feature
 
-
+#### Author feature
 |    Type    |   Feature 1   | Feature 2   | Feature 3   |  Feature 4 | Feature 5 |  
 |:------:|:---------:|:----------:|:------:|:--------:|:--------:|  
 | **Author** | author_id | affiliation|      |          |           |
+
+#### Paper feature
+|    Type    |   Feature 1   | Feature 2   | Feature 3   |  Feature 4 | Feature 5 |  
+|:------:|:---------:|:----------:|:------:|:--------:|:--------:|  
 | **Paper**  | paper_id  |     year       | abstract | keywords |   |  
 
 
@@ -34,7 +38,7 @@ After we obtained author and paper data, we made a single author node data by jo
 </p>
 
 As can be seen in the figure, most of the author affiliation is *Google*, (which is about ??%).  
-Therefore, we performed oversampling/undersampling to solve the data imbalance problem.
+Therefore, we performed oversampling/undersampling to handle the imbalanced data.
 
 ## Environment setting
 * NVCC : 11.6
@@ -55,7 +59,7 @@ For reproducibility, simply change the *seed* into 0,1 and 2 and calculate the a
 
 ### GAT
 ```
-CUDA_VISIBLE_DEVICES=0 python src/main.py \
+CUDA_VISIBLE_DEVICES=0 python GAT/main.py \
     --dropout 0.4 \
     --feature_dim 1000 \
     --seed 0 \
@@ -72,4 +76,10 @@ This is average accuracy over 3 seeds.
 
 ### Analysis
 Surprisingly, traditional machine learning approach (XGBoost) shows better performance than modern GNN models.  
-We analyze the data and found that our data is highly disconnected which hinders global message passing between other nodes and prone to overfitting in a few subgraphs.
+We analyze the data and found that our data is highly disconnected which hinders message passing between the most of the nodes and prone to overfitting in a few subgraphs.
+
+<p align="center">
+    <img src="./figs/graph_data.png" alt="drawing" width="600"/>
+</p>
+
+Given the highly disconnected nature of our data, Graph Neural Networks (GNNs) proved to be less effective. Treating our data as tabular rather than graph-structured appears to be a more accurate representation of its characteristics. In attempts to mitigate this issue, we experimented with strategies like random edge addition and virtual node introduction, but these approaches unfortunately reduced model performance. Moving forward, our focus will be on developing GNNs tailored for highly disconnected graphs. This advancement aims to better capture the inter-node relationships, mirroring human networks, which are crucial in career selection processes.
