@@ -25,7 +25,7 @@ parser.add_argument('--seed', default=0, type=int)
 parser.add_argument('--label_num', default=10, type=int)
 parser.add_argument('--max_features', default=100, type=int)
 parser.add_argument('--lr', default=0.01, type=float)
-parser.add_argument('--max_epoch', default=5000, type=int)
+parser.add_argument('--max_epoch', default=4000, type=int)
 parser.add_argument('--dataset_dir', default='dataset', type=str)
 parser.add_argument('--patience_threshold', default=30, type=int)
 parser.add_argument('--feature_dim', default=300, type=int)
@@ -37,7 +37,7 @@ parser.add_argument('--p',default=0.01, type=float, help='Probability for random
 args = parser.parse_args()
 
 # wandb.init(project='DM_final', name = f"dropout_{args.dropout}_feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_heads_{args.heads}")
-wandb.init(project='DM_final', name = f"dropout_{args.dropout}_feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_heads_{args.heads}")
+wandb.init(project='DM_gat', name = f"dropout_{args.dropout}_feat_{args.feature_dim}_seed_{args.seed}_lr_{args.lr}_dim_h_{args.dim_h}_heads_{args.heads}")
 wandb.config.update(args)
 
 torch.manual_seed(args.seed)
